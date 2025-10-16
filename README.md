@@ -69,7 +69,7 @@ The Driver Test expects a **binary file**, not plain text.
 ```bash
 printf "\xFF" > input.txt
 ```
-
+You can replace "FF" with any other byte such as "00" or "F0"
 ### Verifying the Output
 
 After running the Driver Test, you can check that the byte was successfully written to `output.txt`.
