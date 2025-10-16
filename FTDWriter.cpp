@@ -32,3 +32,18 @@ FT_STATUS FTDWriter::write() {
               << std::hex << static_cast<int>(byteToWrite) << std::dec << "\n";
     return ftStatus;
 }
+
+void FTDWriter::writeToFile(const std::string& filename) {
+    std::ofstream file(filename, std::ios::binary);
+    if (!file) {
+        throw std::runtime_error("Failed to open output file: " + filename);
+    }
+
+    file.write(reinterpret_cast<const char*>(&byteToWrite), 1);
+    if (!file) {
+        throw std::runtime_error("Failed to write to " + filename);
+    }
+
+    std::cout << "Byte 0x" << std::hex << static_cast<int>(byteToWrite)
+              << std::dec << " written to " << filename << "\n";
+}

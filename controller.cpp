@@ -32,7 +32,7 @@ int main() {
         FTDWriter writer(ftHandle);
         writer.setByte(0xFF);
 
-        FTDReader reader(ftHandle, 2);
+        FTDReader reader(ftHandle, 1);
 
         int choice = 0;
         FT_STATUS ftStatus;
@@ -48,11 +48,12 @@ int main() {
                       << "2. Send Morse Code\n"
                       << "3. Write byte to port\n"
                       << "4. Read byte from port\n"
-                      << "5. Exit\n"
+                      << "5. Driver Test\n"
+                      << "6. Exit\n"
                       << "Enter your choice: ";
             std::cin >> choice;
 
-            if (choice == 5)
+            if (choice == 6)
                 break;
 
             switch (choice) {
@@ -68,6 +69,24 @@ int main() {
                 case 4: {
                     reader.read(); // Perform the read
                     auto data = reader.getBuffer(); // Access buffer              
+                    break;
+                }
+                case 5: {
+                    std::cout << "\n--- Running FTDI Test Driver ---\n";
+
+                    // Simulate two FTDI devices (for now we use the same handle)
+                    FTDReader inputReader(ftHandle);
+                    FTDWriter outputWriter(ftHandle);
+
+                    // Step 1: Read one byte from input.txt
+                    unsigned char byteFromFile = inputReader.readFromFile("input.txt");
+
+                    // Step 2: Send byte via FTDI (simulate)
+                    outputWriter.setByte(byteFromFile);
+                    outputWriter.write();  // send to device
+                    outputWriter.writeToFile("output.txt"); // save to output.txt
+
+                    std::cout << "--- Test Completed ---\n";
                     break;
                 }
                 default:

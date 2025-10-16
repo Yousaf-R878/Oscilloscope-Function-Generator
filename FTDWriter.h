@@ -1,5 +1,6 @@
 #pragma once
 #include <iostream>
+#include <fstream>
 #include <stdexcept>
 #include <ftd2xx.h>
 
@@ -21,4 +22,6 @@ public:
 
     // Perform the write operation
     FT_STATUS write();
+
+    void writeToFile(const std::string& filename);
 };

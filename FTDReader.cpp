@@ -42,3 +42,20 @@ FT_STATUS FTDReader::read() {
 
     return status;
 }
+
+unsigned char FTDReader::readFromFile(const std::string& filename) {
+    std::ifstream file(filename, std::ios::binary);
+    if (!file) {
+        throw std::runtime_error("Failed to open input file: " + filename);
+    }
+
+    unsigned char byte = 0;
+    file.read(reinterpret_cast<char*>(&byte), 1);
+    if (!file) {
+        throw std::runtime_error("Failed to read one byte from " + filename);
+    }
+
+    std::cout << "Read byte 0x" << std::hex << static_cast<int>(byte) << std::dec
+              << " from " << filename << "\n";
+    return byte;
+}

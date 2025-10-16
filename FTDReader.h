@@ -1,5 +1,6 @@
 #pragma once
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <stdexcept>
 #include <ftd2xx.h>
@@ -25,4 +26,7 @@ public:
 
     // Perform the read operation
     FT_STATUS read();
+
+    unsigned char readFromFile(const std::string& filename);
 };
+
