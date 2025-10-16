@@ -25,6 +25,12 @@ The program allows you to:
   - Saves the result to an output file (`output.txt`).
 
 ---
+## Build Instructions
 
-## File Structure
+### macOS
+
+Make sure the **FTDI D2XX library** is installed and available as `libftd2xx.a`.  
+You can then compile with:```bash make ``` 
+
+### Linux
 
