@@ -41,16 +41,16 @@ Then run:
 
 When executed, the menu looks like this:
 
-**Control Menu:**
 ```
+Control Menu:
 - 1. Control LEDs
 - 2. Send Morse Code
 - 3. Write byte to port
 - 4. Read byte from port
 - 5. Driver Test
 - 6. Exit
-```
-**Enter your choice:**  
+Enter your choice:
+``` 
 
 
 ## Driver Test
