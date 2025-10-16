@@ -27,10 +27,39 @@ The program allows you to:
 ---
 ## Build Instructions
 
+Make sure the **FTDI D2XX library** is installed and available as `libftd2xx.a`. 
+
 ### macOS
 
-Make sure the **FTDI D2XX library** is installed and available as `libftd2xx.a`.  
-You can then compile with:```bash make ``` 
+You can then compile with: 
+```make ``` 
 
-### Linux
+Then run: 
+```./main```
 
+## Driver Test
+
+The **Driver Test** performs a simulated transfer:
+
+1. Reads **1 byte** from `input.txt`.
+2. Writes it through the FTDI device (using the same handle if only one device is present).
+3. Writes that byte to `output.txt`.
+
+### Creating Raw Input Files
+
+The Driver Test expects a **binary file**, not plain text.
+
+#### On macOS / Linux:
+```bash
+printf "\xFF" > input.txt
+```
+
+### Verifying the Output
+
+After running the Driver Test, you can check that the byte was successfully written to `output.txt`.
+
+#### On macOS / Linux:
+Use the `xxd` command to display the file contents in hexadecimal:
+
+```bash
+xxd output.txt
