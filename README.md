@@ -89,9 +89,5 @@ You can view the design here:
 
 ### Preview
 
-If you’d like to include an embedded preview image, export your frame from Figma as a PNG and host it (e.g., GitHub, Imgur, or Figma’s own link).  
-Then replace the placeholder link below with your image URL:
-
 ![Figma Preview](./images/OsciloscopeFigma.png)
 
-*(Replace the link above with your actual image or Figma share link.)*
