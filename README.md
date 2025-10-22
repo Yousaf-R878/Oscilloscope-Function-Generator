@@ -79,7 +79,7 @@ Use the `xxd` command to display the file contents in hexadecimal:
 
 ```bash
 xxd output.txt
-
+```
 ## Figma Design
 
 A simple Figma mockup illustrates the interface and flow of the **Oscilloscope-Function-Generator** application.
