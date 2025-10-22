@@ -79,3 +79,19 @@ Use the `xxd` command to display the file contents in hexadecimal:
 
 ```bash
 xxd output.txt
+
+## Figma Design
+
+A simple Figma mockup illustrates the interface and flow of the **Oscilloscope-Function-Generator** application.
+
+You can view the design here:  
+👉 [**View Figma Design**](https://www.figma.com/design/vYemvnTYgpOh9eQVtW2I5X/Osciloscope?node-id=0-1&p=f&t=51dGk6KWzvfs07sf-0)
+
+### Preview
+
+If you’d like to include an embedded preview image, export your frame from Figma as a PNG and host it (e.g., GitHub, Imgur, or Figma’s own link).  
+Then replace the placeholder link below with your image URL:
+
+![Figma Preview](./images/OsciloscopeFigma.png)
+
+*(Replace the link above with your actual image or Figma share link.)*
