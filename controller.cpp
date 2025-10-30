@@ -141,3 +141,4 @@ void initializeDevice(FT_HANDLE& ftHandle) {
 // FT_STATUS Write(FT_HANDLE ftHandle, LPVOID lpBuffer, DWORD dwBytesToWrite, LPDWORD lpdwBytesWritten) {
 //     return FT_Write(ftHandle, lpBuffer, dwBytesToWrite, lpdwBytesWritten);
 // }
+//have a data class
