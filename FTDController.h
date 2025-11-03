@@ -10,7 +10,9 @@
 #include <FTDReader.h>
 #include "FTDLEDController.h"
 #include "FTDMorseCode.h"
-
+#include "FTDProcess.h"
+#include "FTDShift.h"
+#include "FTDScale.h"
 
 class FTDController {
 public:
@@ -21,6 +23,7 @@ public:
     void controlLED();
     void sendMorseCode();
     void driverTest();
+    void runProcess(Process& process);
 
 private:
     FT_HANDLE ftHandle;

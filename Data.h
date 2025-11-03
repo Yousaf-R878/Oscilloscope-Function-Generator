@@ -1,4 +1,5 @@
-// Data.h
+#pragma once
+
 class Data {
 private:
     int value;

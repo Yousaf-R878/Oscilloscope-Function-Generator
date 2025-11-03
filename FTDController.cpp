@@ -1,4 +1,5 @@
 #include <FTDController.h>
+#include <Data.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -83,6 +84,22 @@ void FTDController::driverTest() {
     std::cout << "--- Test Completed ---\n";
 }
 
+void FTDController::runProcess(Process& process){
+    reader->read();
+    auto buffer = reader->getBuffer(); 
+    Data data(buffer[0]);  //ONLY READING 1 BYTE 
+
+    // Step 2: execute the process
+    process.execute(data);
+
+    // Step 3: write back clamped byte
+    writer->setByte(static_cast<unsigned char>(data.getValue()));
+    writer->write();
+
+    std::cout << "Process applied. New byte value: "
+              << static_cast<int>(data.getValue()) << "\n";
+}
+
 void FTDController::runMenu() {
     int choice = 0;
     while (true) {
@@ -92,11 +109,14 @@ void FTDController::runMenu() {
                   << "3. Write byte to port\n"
                   << "4. Read byte from port\n"
                   << "5. Driver Test\n"
-                  << "6. Exit\n"
+                  << "6. Shift\n"
+                  << "7. Scale\n"
+                  << "8. Pipe\n"
+                  << "9. Exit\n"
                   << "Enter your choice: ";
         std::cin >> choice;
 
-        if (choice == 6) break;
+        if (choice == 9) break;
 
         switch (choice) {
             case 1:
@@ -115,8 +135,29 @@ void FTDController::runMenu() {
             case 5:
                 driverTest();
                 break;
+            case 6: { // Shift
+                int offset;
+                std::cout << "Enter shift value: ";
+                std::cin >> offset;
+                Shift shift(offset);
+                runProcess(shift);
+                break;
+            }
+            case 7: { // Scale
+                int factor;
+                std::cout << "Enter scale factor: ";
+                std::cin >> factor;
+                Scale scale(factor);
+                runProcess(scale);
+                break;
+            }
+
+            case 8:
+                std::cout << "Pipe Called";
+                break;
             default:
                 std::cout << "Invalid choice. Try again.\n";
+                break;
         }
     }
 }
