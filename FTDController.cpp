@@ -1,0 +1,122 @@
+#include <FTDController.h>
+
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <unistd.h>
+#endif
+
+FTDController::FTDController() : ftHandle(nullptr) {
+    initializeDevice();
+    writer = std::make_unique<FTDWriter>(ftHandle);
+    reader = std::make_unique<FTDReader>(ftHandle);
+    ledController = std::make_unique<FTDLEDController>(ftHandle);
+    morseCode = std::make_unique<FTDMorseCode>(ftHandle);
+
+
+}
+
+FTDController::~FTDController() {
+    closeDevice();
+}
+
+void FTDController::checkStatus(FT_STATUS status, const std::string& message) {
+    if (status != FT_OK) {
+        throw std::runtime_error(message + " (FT_STATUS=" + std::to_string(status) + ")");
+    }
+}
+
+void FTDController::initializeDevice() {
+    FT_STATUS ftStatus;
+
+    ftStatus = FT_Open(0, &ftHandle);
+    checkStatus(ftStatus, "FT_Open failed");
+    std::cout << "Device opened successfully.\n";
+
+    ftStatus = FT_ResetDevice(ftHandle);
+    checkStatus(ftStatus, "FT_ResetDevice failed");
+    std::cout << "Device reset successfully.\n";
+
+    ftStatus = FT_Purge(ftHandle, FT_PURGE_RX | FT_PURGE_TX);
+    checkStatus(ftStatus, "FT_Purge failed");
+    std::cout << "Purged USB buffers successfully.\n";
+
+    ftStatus = FT_SetUSBParameters(ftHandle, 64, 0);
+    checkStatus(ftStatus, "FT_SetUSBParameters failed");
+    std::cout << "USB parameters set successfully.\n";
+
+    ftStatus = FT_SetBitMode(ftHandle, 0xFF, 0x01);
+    checkStatus(ftStatus, "FT_SetBitMode failed");
+    std::cout << "Set synchronous bit bang mode successfully.\n";
+}
+
+void FTDController::closeDevice() {
+    if (ftHandle) {
+        FT_Close(ftHandle);
+        std::cout << "Device closed.\n";
+        ftHandle = nullptr;
+    }
+}
+
+void FTDController::controlLED() {
+    std::cout << "[Stub] controlLED called.\n";
+    ledController->interactiveControl();
+}
+
+void FTDController::sendMorseCode() {
+    std::cout << "[Stub] sendMorseCode called.\n";
+    morseCode->interactiveSend();
+}
+
+void FTDController::driverTest() {
+    std::cout << "\n--- Running FTDI Test Driver ---\n";
+
+    // Simulate two FTDI devices (for now we use the same handle)
+    FTDReader inputReader(ftHandle);
+    FTDWriter outputWriter(ftHandle);
+
+    unsigned char byteFromFile = inputReader.readFromFile("input.txt");
+    outputWriter.setByte(byteFromFile);
+    outputWriter.write();
+    outputWriter.writeToFile("output.txt");
+
+    std::cout << "--- Test Completed ---\n";
+}
+
+void FTDController::runMenu() {
+    int choice = 0;
+    while (true) {
+        std::cout << "\nControl Menu\n"
+                  << "1. Control LEDs\n"
+                  << "2. Send Morse Code\n"
+                  << "3. Write byte to port\n"
+                  << "4. Read byte from port\n"
+                  << "5. Driver Test\n"
+                  << "6. Exit\n"
+                  << "Enter your choice: ";
+        std::cin >> choice;
+
+        if (choice == 6) break;
+
+        switch (choice) {
+            case 1:
+                controlLED();
+                break;
+            case 2:
+                sendMorseCode();
+                break;
+            case 3:
+                writer->write();
+                break;
+            case 4:
+                reader->read();
+                reader->getBuffer();
+                break;
+            case 5:
+                driverTest();
+                break;
+            default:
+                std::cout << "Invalid choice. Try again.\n";
+        }
+    }
+}
