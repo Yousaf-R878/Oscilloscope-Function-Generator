@@ -13,6 +13,8 @@
 #include "FTDProcess.h"
 #include "FTDShift.h"
 #include "FTDScale.h"
+#include <FTDPipe.h> 
+#include <Data.h>   
 
 class FTDController {
 public:
@@ -31,6 +33,7 @@ private:
     std::unique_ptr<FTDReader> reader;
     std::unique_ptr<FTDLEDController> ledController;
     std::unique_ptr<FTDMorseCode> morseCode;
+    std::unique_ptr<Pipe> pipe; // ✅ our new Pipe instance
 
 
     void initializeDevice();

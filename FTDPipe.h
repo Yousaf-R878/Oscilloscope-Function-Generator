@@ -1,6 +1,6 @@
 #include <vector>
 #include <memory>
-#include <Process.h>
+#include <FTDProcess.h>
 
 class Pipe {
     std::vector<std::shared_ptr<Process>> processes;
@@ -13,5 +13,8 @@ public:
         for (auto& process : processes) {
             process->execute(data);
         }
+    }
+    void clear() { 
+        processes.clear(); 
     }
 };

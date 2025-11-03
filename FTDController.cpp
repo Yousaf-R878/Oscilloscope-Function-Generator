@@ -13,7 +13,7 @@ FTDController::FTDController() : ftHandle(nullptr) {
     reader = std::make_unique<FTDReader>(ftHandle);
     ledController = std::make_unique<FTDLEDController>(ftHandle);
     morseCode = std::make_unique<FTDMorseCode>(ftHandle);
-
+    pipe = std::make_unique<Pipe>();
 
 }
 
@@ -109,9 +109,9 @@ void FTDController::runMenu() {
                   << "3. Write byte to port\n"
                   << "4. Read byte from port\n"
                   << "5. Driver Test\n"
-                  << "6. Shift\n"
-                  << "7. Scale\n"
-                  << "8. Pipe\n"
+                  << "6. Add Shift filter\n"
+                  << "7. Add Scale filter\n"
+                  << "8. Run Pipe\n"
                   << "9. Exit\n"
                   << "Enter your choice: ";
         std::cin >> choice;
@@ -137,24 +137,51 @@ void FTDController::runMenu() {
                 break;
             case 6: { // Shift
                 int offset;
-                std::cout << "Enter shift value: ";
+                std::cout << "Enter shift offset: ";
                 std::cin >> offset;
-                Shift shift(offset);
-                runProcess(shift);
+                pipe->addProcess(std::make_shared<Shift>(offset));
+                std::cout << "Added Shift filter (" << offset << ")\n";
                 break;
             }
             case 7: { // Scale
                 int factor;
                 std::cout << "Enter scale factor: ";
                 std::cin >> factor;
-                Scale scale(factor);
-                runProcess(scale);
+                pipe->addProcess(std::make_shared<Scale>(factor));
+                std::cout << "Added Scale filter (" << factor << ")\n";
                 break;
             }
+            case 8: {
+                std::cout << "Running pipe...\n";
 
-            case 8:
-                std::cout << "Pipe Called";
+                // Read one byte from the FTDI device
+                reader->read();
+                auto dataBuffer = reader->getBuffer();
+                if (dataBuffer.empty()) {
+                    std::cout << "No data available to process.\n";
+                    break;
+                }
+
+                Data data(dataBuffer[0]);
+                std::cout << "Original data: " << data.getValue() << "\n";
+
+                // Execute all filters
+                pipe->execute(data);
+
+                // Clamp and write result
+                unsigned char result = data.getValue();
+                std::cout << "Processed (clamped) data: " << (int)result << "\n";
+
+                writer->setByte(result);
+                writer->write();
+
+                std::cout << "Processed byte written to FTDI device.\n";
+
+                pipe->clear();
+                
+                std::cout << "Pipe cleared.\n";
                 break;
+            }
             default:
                 std::cout << "Invalid choice. Try again.\n";
                 break;
