@@ -1,0 +1,19 @@
+# Sample command file for oscilloscope
+# Start the oscilloscope
+start
+
+# Set number of samples to collect
+samples 10
+
+# Read 64 bytes from FTDI device
+read 16
+
+# Write 64 bytes to FTDI device
+write 64
+
+# Stop the oscilloscope
+stop
+
+# Write collected data to file
+writeFile output.txt
+

@@ -39,7 +39,9 @@ Then run:
 
 ## Running the Program
 
-When executed, the menu looks like this:
+### Interactive Menu Mode
+
+When executed without arguments, the menu looks like this:
 
 ```
 Control Menu:
@@ -51,6 +53,68 @@ Control Menu:
 - 6. Exit
 Enter your choice:
 ``` 
+
+### Command-Line Interface (CLI) Mode
+
+The program supports file-based command execution for automation and scripting. You can execute commands from a file:
+
+```bash
+./main commands.txt
+```
+
+#### Command Format
+
+Commands are space-separated and case-insensitive. Each command should be on a single line. Comments start with `#`.
+
+**Available Commands:**
+
+- `start` - Start oscilloscope data collection
+- `stop` - Stop oscilloscope data collection
+- `read <count>` - Read N bytes from FTDI device (e.g., `read 64`)
+- `write <count>` - Write N bytes to FTDI device (e.g., `write 64`)
+- `samples <number>` - Set number of samples for oscilloscope (e.g., `samples 10000`)
+  - If oscilloscope is running, data collection will begin immediately
+- `readFile <filename>` - Read data from a file (e.g., `readFile input.txt`)
+- `writeFile <filename>` - Write data to a file (e.g., `writeFile output.txt`)
+
+#### Example Command File
+
+Create a file `commands.txt`:
+
+```
+# Start the oscilloscope
+start
+
+# Set number of samples to collect
+samples 10000
+
+# Read 64 bytes from FTDI device
+read 64
+
+# Write 64 bytes to FTDI device
+write 64
+
+# Stop the oscilloscope
+stop
+
+# Write collected data to file
+writeFile output.txt
+```
+
+Then execute:
+```bash
+./main commands.txt
+```
+
+#### Oscilloscope Data Collection
+
+The oscilloscope functionality allows you to collect data from the FTDI device:
+
+1. Start the oscilloscope with `start`
+2. Set the number of samples with `samples <number>`
+3. If the oscilloscope is running when you set samples, data collection begins immediately
+4. Stop with `stop`
+5. Use `writeFile` to save collected data to a file
 
 
 ## Driver Test

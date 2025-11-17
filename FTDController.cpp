@@ -1,5 +1,7 @@
 #include <FTDController.h>
 #include <Data.h>
+#include <fstream>
+#include "FTDCommand.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -7,14 +9,14 @@
 #include <unistd.h>
 #endif
 
-FTDController::FTDController() : ftHandle(nullptr) {
+FTDController::FTDController() : ftHandle(nullptr), numberOfSamples(0) {
     initializeDevice();
     writer = std::make_unique<FTDWriter>(ftHandle);
     reader = std::make_unique<FTDReader>(ftHandle);
     ledController = std::make_unique<FTDLEDController>(ftHandle);
     morseCode = std::make_unique<FTDMorseCode>(ftHandle);
     pipe = std::make_unique<Pipe>();
-
+    oscilloscope = std::make_unique<FTDOscilloscope>(reader.get(), writer.get());
 }
 
 FTDController::~FTDController() {
@@ -82,6 +84,11 @@ void FTDController::driverTest() {
     outputWriter.writeToFile("output.txt");
 
     std::cout << "--- Test Completed ---\n";
+}
+
+void FTDController::addProcess(std::shared_ptr<Process> p) {
+    if (!pipe) pipe = std::make_unique<Pipe>();
+    pipe->addProcess(p);
 }
 
 void FTDController::runProcess(Process& process){
@@ -185,6 +192,100 @@ void FTDController::runMenu() {
             default:
                 std::cout << "Invalid choice. Try again.\n";
                 break;
+        }
+    }
+}
+
+// Command execution methods
+void FTDController::startOscilloscope() {
+    if (oscilloscope) {
+        oscilloscope->start();
+    }
+}
+
+void FTDController::stopOscilloscope() {
+    if (oscilloscope) {
+        oscilloscope->stop();
+    }
+}
+
+void FTDController::readBytes(int count) {
+    if (!reader) {
+        throw std::runtime_error("Reader not initialized");
+    }
+    
+    // Set buffer size and read
+    reader->setBufferSize(count);
+    reader->read();
+    
+    auto buffer = reader->getBuffer();
+    std::cout << "Read " << buffer.size() << " bytes from FTDI device." << std::endl;
+}
+
+void FTDController::writeBytes(int count) {
+    if (!writer) {
+        throw std::runtime_error("Writer not initialized");
+    }
+    
+    // Write count bytes (using the current byte value)
+    for (int i = 0; i < count; i++) {
+        writer->write();
+    }
+    
+    std::cout << "Wrote " << count << " bytes to FTDI device." << std::endl;
+}
+
+void FTDController::setNumberOfSamples(int numberOfSamples) {
+    this->numberOfSamples = numberOfSamples;
+    std::cout << "Number of samples set to: " << numberOfSamples << std::endl;
+    
+    // If oscilloscope is already running, start collecting data
+    if (oscilloscope && oscilloscope->isRunning()) {
+        oscilloscope->collectData(numberOfSamples);
+    }
+}
+
+void FTDController::readFromFile(const std::string& filename) {
+    if (!reader) {
+        throw std::runtime_error("Reader not initialized");
+    }
+    
+    unsigned char byte = reader->readFromFile(filename);
+    writer->setByte(byte);
+    std::cout << "Read from file and set byte: 0x" << std::hex 
+              << static_cast<int>(byte) << std::dec << std::endl;
+}
+
+void FTDController::writeToFile(const std::string& filename) {
+    if (!writer) {
+        throw std::runtime_error("Writer not initialized");
+    }
+    
+    // If oscilloscope has collected data, write it
+    if (oscilloscope && !oscilloscope->getCollectedData().empty()) {
+        auto data = oscilloscope->getCollectedData();
+        std::ofstream file(filename, std::ios::binary);
+        if (!file) {
+            throw std::runtime_error("Failed to open file for writing: " + filename);
+        }
+        file.write(reinterpret_cast<const char*>(data.data()), data.size());
+        std::cout << "Wrote " << data.size() << " bytes to file: " << filename << std::endl;
+    } else {
+        // Write current byte to file
+        writer->writeToFile(filename);
+    }
+}
+
+void FTDController::executeCommand(FTDCommand* command) {
+    if (command) {
+        command->execute(this);
+    }
+}
+
+void FTDController::executeCommands(const std::vector<std::unique_ptr<FTDCommand>>& commands) {
+    for (const auto& command : commands) {
+        if (command) {
+            executeCommand(command.get());
         }
     }
 }
