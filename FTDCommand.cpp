@@ -21,13 +21,13 @@ void ReadCommand::execute(FTDController* controller) {
 
 void WriteCommand::execute(FTDController* controller) {
     if (controller) {
-        controller->writeBytes(count);
+        controller->writeBytes(byteValue, count);
     }
 }
 
 void SamplesCommand::execute(FTDController* controller) {
     if (controller) {
-        controller->setNumberOfSamples(numberOfSamples);
+        controller->configureSampling(numberOfSamples, intervalMicros);
     }
 }
 

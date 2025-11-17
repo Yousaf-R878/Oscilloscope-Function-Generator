@@ -8,8 +8,6 @@
 #include "ftd2xx.h"
 #include <FTDWriter.h>
 #include <FTDReader.h>
-#include "FTDLEDController.h"
-#include "FTDMorseCode.h"
 #include "FTDProcess.h"
 #include "FTDShift.h"
 #include "FTDScale.h"
@@ -43,8 +41,8 @@ public:
     void startOscilloscope();
     void stopOscilloscope();
     void readBytes(int count);
-    void writeBytes(int count);
-    void setNumberOfSamples(int numberOfSamples);
+    void writeBytes(unsigned char byteValue, int count = 1);
+    void configureSampling(int numberOfSamples, int intervalMicros);
     void readFromFile(const std::string& filename);
     void writeToFile(const std::string& filename);
     
@@ -56,11 +54,10 @@ private:
     FT_HANDLE ftHandle;
     std::unique_ptr<FTDWriter> writer;
     std::unique_ptr<FTDReader> reader;
-    std::unique_ptr<FTDLEDController> ledController;
-    std::unique_ptr<FTDMorseCode> morseCode;
     std::unique_ptr<Pipe> pipe;
     std::unique_ptr<FTDOscilloscope> oscilloscope;
     int numberOfSamples;
+    int sampleIntervalMicros;
 
     void initializeDevice();
     void closeDevice();

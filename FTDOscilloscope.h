@@ -17,8 +17,8 @@ public:
     // Stop data collection
     void stop();
     
-    // Collect data for specified number of samples
-    void collectData(int numberOfSamples);
+    // Collect data for specified number of samples using interval in microseconds
+    void collectData(int numberOfSamples, int intervalMicros);
     
     // Check if oscilloscope is running
     bool isRunning() const { return running; }

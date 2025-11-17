@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cctype>
 #include <stdexcept>
+#include <limits>
 
 std::unique_ptr<FTDCommand> FTDCommandParser::parseCommand(const std::string& line) {
     auto tokens = split(line);
@@ -30,17 +31,22 @@ std::unique_ptr<FTDCommand> FTDCommandParser::parseCommand(const std::string& li
     }
     else if (command == "write") {
         if (tokens.size() < 2) {
-            throw std::runtime_error("Write command requires a count argument");
+            throw std::runtime_error("Write command requires a byte value argument");
         }
-        int count = std::stoi(tokens[1]);
-        return std::make_unique<WriteCommand>(count);
+        unsigned char byteValue = parseByteValue(tokens[1]);
+        int count = 1;
+        if (tokens.size() >= 3) {
+            count = std::stoi(tokens[2]);
+        }
+        return std::make_unique<WriteCommand>(byteValue, count);
     }
     else if (command == "samples") {
-        if (tokens.size() < 2) {
-            throw std::runtime_error("Samples command requires a number argument");
+        if (tokens.size() < 3) {
+            throw std::runtime_error("Samples command requires count and interval arguments (e.g., samples 1000 5ms)");
         }
         int numberOfSamples = std::stoi(tokens[1]);
-        return std::make_unique<SamplesCommand>(numberOfSamples);
+        int intervalMicros = parseDurationMicros(tokens[2]);
+        return std::make_unique<SamplesCommand>(numberOfSamples, intervalMicros);
     }
     else if (command == "readfile") {
         if (tokens.size() < 2) {
@@ -139,5 +145,66 @@ std::vector<std::string> FTDCommandParser::split(const std::string& str) {
     }
     
     return tokens;
+}
+
+unsigned char FTDCommandParser::parseByteValue(const std::string& str) {
+    // Check if it's a hex value (0xFF, 0xff, FF, ff)
+    if (str.length() >= 2 && str.substr(0, 2) == "0x") {
+        // Hex format: 0xFF
+        return static_cast<unsigned char>(std::stoul(str, nullptr, 16));
+    }
+    else if (str.length() == 2 && 
+             ((str[0] >= '0' && str[0] <= '9') || (str[0] >= 'A' && str[0] <= 'F') || (str[0] >= 'a' && str[0] <= 'f')) &&
+             ((str[1] >= '0' && str[1] <= '9') || (str[1] >= 'A' && str[1] <= 'F') || (str[1] >= 'a' && str[1] <= 'f'))) {
+        // Hex format: FF (two hex digits)
+        return static_cast<unsigned char>(std::stoul(str, nullptr, 16));
+    }
+    else {
+        // Decimal format
+        int value = std::stoi(str);
+        if (value < 0 || value > 255) {
+            throw std::runtime_error("Byte value must be between 0 and 255");
+        }
+        return static_cast<unsigned char>(value);
+    }
+}
+
+int FTDCommandParser::parseDurationMicros(const std::string& str) {
+    if (str.empty()) {
+        throw std::runtime_error("Duration value cannot be empty");
+    }
+
+    std::string lower = str;
+    std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
+
+    long long multiplier = 1; // default microseconds
+    std::string numericPortion = lower;
+
+    if (lower.size() >= 2 && lower.substr(lower.size() - 2) == "ms") {
+        multiplier = 1000;
+        numericPortion = lower.substr(0, lower.size() - 2);
+    } else if (lower.size() >= 2 && lower.substr(lower.size() - 2) == "us") {
+        multiplier = 1;
+        numericPortion = lower.substr(0, lower.size() - 2);
+    } else if (lower.back() == 's') {
+        multiplier = 1'000'000;
+        numericPortion = lower.substr(0, lower.size() - 1);
+    }
+
+    if (numericPortion.empty()) {
+        throw std::runtime_error("Invalid duration value: " + str);
+    }
+
+    double value = std::stod(numericPortion);
+    if (value <= 0) {
+        throw std::runtime_error("Duration must be greater than zero");
+    }
+
+    long long micros = static_cast<long long>(value * multiplier);
+    if (micros <= 0 || micros > std::numeric_limits<int>::max()) {
+        throw std::runtime_error("Duration out of range for microseconds: " + str);
+    }
+
+    return static_cast<int>(micros);
 }
 

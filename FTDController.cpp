@@ -9,12 +9,10 @@
 #include <unistd.h>
 #endif
 
-FTDController::FTDController() : ftHandle(nullptr), numberOfSamples(0) {
+FTDController::FTDController() : ftHandle(nullptr), numberOfSamples(0), sampleIntervalMicros(0) {
     initializeDevice();
     writer = std::make_unique<FTDWriter>(ftHandle);
     reader = std::make_unique<FTDReader>(ftHandle);
-    ledController = std::make_unique<FTDLEDController>(ftHandle);
-    morseCode = std::make_unique<FTDMorseCode>(ftHandle);
     pipe = std::make_unique<Pipe>();
     oscilloscope = std::make_unique<FTDOscilloscope>(reader.get(), writer.get());
 }
@@ -61,15 +59,6 @@ void FTDController::closeDevice() {
     }
 }
 
-void FTDController::controlLED() {
-    std::cout << "[Stub] controlLED called.\n";
-    ledController->interactiveControl();
-}
-
-void FTDController::sendMorseCode() {
-    std::cout << "[Stub] sendMorseCode called.\n";
-    morseCode->interactiveSend();
-}
 
 void FTDController::driverTest() {
     std::cout << "\n--- Running FTDI Test Driver ---\n";
@@ -111,38 +100,30 @@ void FTDController::runMenu() {
     int choice = 0;
     while (true) {
         std::cout << "\nControl Menu\n"
-                  << "1. Control LEDs\n"
-                  << "2. Send Morse Code\n"
-                  << "3. Write byte to port\n"
-                  << "4. Read byte from port\n"
-                  << "5. Driver Test\n"
-                  << "6. Add Shift filter\n"
-                  << "7. Add Scale filter\n"
-                  << "8. Run Pipe\n"
-                  << "9. Exit\n"
+                  << "1. Write byte to port\n"
+                  << "2. Read byte from port\n"
+                  << "3. Driver Test\n"
+                  << "4. Add Shift filter\n"
+                  << "5. Add Scale filter\n"
+                  << "6. Run Pipe\n"
+                  << "7. Exit\n"
                   << "Enter your choice: ";
         std::cin >> choice;
 
-        if (choice == 9) break;
+        if (choice == 7) break;
 
         switch (choice) {
             case 1:
-                controlLED();
-                break;
-            case 2:
-                sendMorseCode();
-                break;
-            case 3:
                 writer->write();
                 break;
-            case 4:
+            case 2:
                 reader->read();
                 reader->getBuffer();
                 break;
-            case 5:
+            case 3:
                 driverTest();
                 break;
-            case 6: { // Shift
+            case 4: { // Shift
                 int offset;
                 std::cout << "Enter shift offset: ";
                 std::cin >> offset;
@@ -150,7 +131,7 @@ void FTDController::runMenu() {
                 std::cout << "Added Shift filter (" << offset << ")\n";
                 break;
             }
-            case 7: { // Scale
+            case 5: { // Scale
                 int factor;
                 std::cout << "Enter scale factor: ";
                 std::cin >> factor;
@@ -158,7 +139,7 @@ void FTDController::runMenu() {
                 std::cout << "Added Scale filter (" << factor << ")\n";
                 break;
             }
-            case 8: {
+            case 6: {
                 std::cout << "Running pipe...\n";
 
                 // Read one byte from the FTDI device
@@ -200,6 +181,11 @@ void FTDController::runMenu() {
 void FTDController::startOscilloscope() {
     if (oscilloscope) {
         oscilloscope->start();
+        if (numberOfSamples > 0 && sampleIntervalMicros > 0) {
+            oscilloscope->collectData(numberOfSamples, sampleIntervalMicros);
+        } else {
+            std::cout << "No sampling configuration set. Use 'samples <count> <interval>' to configure." << std::endl;
+        }
     }
 }
 
@@ -222,26 +208,37 @@ void FTDController::readBytes(int count) {
     std::cout << "Read " << buffer.size() << " bytes from FTDI device." << std::endl;
 }
 
-void FTDController::writeBytes(int count) {
+void FTDController::writeBytes(unsigned char byteValue, int count) {
     if (!writer) {
         throw std::runtime_error("Writer not initialized");
     }
     
-    // Write count bytes (using the current byte value)
+    // Set the byte value and write it count times
+    writer->setByte(byteValue);
     for (int i = 0; i < count; i++) {
         writer->write();
     }
     
-    std::cout << "Wrote " << count << " bytes to FTDI device." << std::endl;
+    std::cout << "Wrote " << count << " byte(s) (0x" << std::hex 
+              << static_cast<int>(byteValue) << std::dec << ") to FTDI device." << std::endl;
 }
 
-void FTDController::setNumberOfSamples(int numberOfSamples) {
+void FTDController::configureSampling(int numberOfSamples, int intervalMicros) {
+    if (numberOfSamples <= 0) {
+        throw std::invalid_argument("Number of samples must be greater than zero");
+    }
+    if (intervalMicros <= 0) {
+        throw std::invalid_argument("Sample interval must be greater than zero microseconds");
+    }
+
     this->numberOfSamples = numberOfSamples;
-    std::cout << "Number of samples set to: " << numberOfSamples << std::endl;
+    this->sampleIntervalMicros = intervalMicros;
+    std::cout << "Sampling configured: " << numberOfSamples
+              << " samples @ " << intervalMicros << " microseconds interval." << std::endl;
     
     // If oscilloscope is already running, start collecting data
     if (oscilloscope && oscilloscope->isRunning()) {
-        oscilloscope->collectData(numberOfSamples);
+        oscilloscope->collectData(numberOfSamples, intervalMicros);
     }
 }
 

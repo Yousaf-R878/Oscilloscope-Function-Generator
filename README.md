@@ -56,11 +56,25 @@ Enter your choice:
 
 ### Command-Line Interface (CLI) Mode
 
-The program supports file-based command execution for automation and scripting. You can execute commands from a file:
+The program supports both file-based and direct command-line execution for automation and scripting.
+
+#### File-Based Execution
+
+Execute commands from a file:
 
 ```bash
 ./main commands.txt
 ```
+
+#### Direct Command-Line Execution
+
+You can also run commands directly from the command line:
+
+```bash
+./main start samples 10 write 0xFF 5 stop
+```
+
+Multiple commands can be chained together. The program will automatically detect if the first argument is a file (if it exists) or treat all arguments as commands.
 
 #### Command Format
 
@@ -71,9 +85,12 @@ Commands are space-separated and case-insensitive. Each command should be on a s
 - `start` - Start oscilloscope data collection
 - `stop` - Stop oscilloscope data collection
 - `read <count>` - Read N bytes from FTDI device (e.g., `read 64`)
-- `write <count>` - Write N bytes to FTDI device (e.g., `write 64`)
-- `samples <number>` - Set number of samples for oscilloscope (e.g., `samples 10000`)
-  - If oscilloscope is running, data collection will begin immediately
+- `write <byte> [count]` - Write byte value to FTDI device (e.g., `write 0xFF` or `write 0xFF 5`)
+  - Byte can be specified in hex (0xFF, FF) or decimal (255)
+  - Optional count parameter specifies how many times to write (default: 1)
+- `samples <number> <interval>` - Configure oscilloscope sampling (e.g., `samples 10000 5ms`)
+  - Interval supports `us`, `ms`, or `s` suffixes (default microseconds)
+  - Oscilloscope must be running to begin collection; if already running, sampling begins immediately
 - `readFile <filename>` - Read data from a file (e.g., `readFile input.txt`)
 - `writeFile <filename>` - Write data to a file (e.g., `writeFile output.txt`)
 
@@ -85,14 +102,17 @@ Create a file `commands.txt`:
 # Start the oscilloscope
 start
 
-# Set number of samples to collect
-samples 10000
+# Set number of samples to collect with 5 ms spacing
+samples 10000 5ms
 
 # Read 64 bytes from FTDI device
 read 64
 
-# Write 64 bytes to FTDI device
-write 64
+# Write byte 0xFF to FTDI device (once)
+write 0xFF
+
+# Write byte 0xAA to FTDI device 5 times
+write 0xAA 5
 
 # Stop the oscilloscope
 stop
@@ -101,9 +121,20 @@ stop
 writeFile output.txt
 ```
 
-Then execute:
+#### Command-Line Examples
+
 ```bash
-./main commands.txt
+# Single command
+./main start
+
+# Multiple commands
+./main start samples 10 5ms write 0xFF 5 stop
+
+# Write byte in different formats
+./main write 0xFF        # Hex format
+./main write FF          # Hex format (no 0x prefix)
+./main write 255         # Decimal format
+./main write 0xFF 10     # Write 0xFF ten times
 ```
 
 #### Oscilloscope Data Collection
@@ -111,7 +142,7 @@ Then execute:
 The oscilloscope functionality allows you to collect data from the FTDI device:
 
 1. Start the oscilloscope with `start`
-2. Set the number of samples with `samples <number>`
+2. Configure sampling with `samples <number> <interval>` (e.g., `samples 500 2ms`)
 3. If the oscilloscope is running when you set samples, data collection begins immediately
 4. Stop with `stop`
 5. Use `writeFile` to save collected data to a file

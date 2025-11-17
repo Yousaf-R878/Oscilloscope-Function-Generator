@@ -19,5 +19,11 @@ public:
 private:
     // Helper to split string by whitespace
     static std::vector<std::string> split(const std::string& str);
+    
+    // Helper to parse byte value (supports hex 0xFF, 0xff, FF, ff, or decimal)
+    static unsigned char parseByteValue(const std::string& str);
+
+    // Helper to parse duration value into microseconds (supports s, ms, us)
+    static int parseDurationMicros(const std::string& str);
 };
 

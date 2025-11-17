@@ -2,6 +2,9 @@
 #include "FTDReader.h"
 #include "FTDWriter.h"
 #include <iostream>
+#include <stdexcept>
+#include <thread>
+#include <chrono>
 
 FTDOscilloscope::FTDOscilloscope(FTDReader* reader, FTDWriter* writer)
     : reader(reader), writer(writer), running(false) {
@@ -22,12 +25,16 @@ void FTDOscilloscope::stop() {
     std::cout << "Total samples collected: " << collectedData.size() << std::endl;
 }
 
-void FTDOscilloscope::collectData(int numberOfSamples) {
+void FTDOscilloscope::collectData(int numberOfSamples, int intervalMicros) {
     if (!running) {
         std::cout << "Warning: Oscilloscope is not running. Starting it now." << std::endl;
         start();
     }
     
+    if (intervalMicros <= 0) {
+        throw std::invalid_argument("Interval must be greater than zero microseconds");
+    }
+
     std::cout << "Collecting " << numberOfSamples << " samples..." << std::endl;
     
     for (int i = 0; i < numberOfSamples && running; i++) {
@@ -47,6 +54,10 @@ void FTDOscilloscope::collectData(int numberOfSamples) {
             
         } catch (const std::exception& e) {
             std::cerr << "Error during data collection at sample " << i << ": " << e.what() << std::endl;
+        }
+
+        if (running && i < numberOfSamples - 1) {
+            std::this_thread::sleep_for(std::chrono::microseconds(intervalMicros));
         }
     }
     

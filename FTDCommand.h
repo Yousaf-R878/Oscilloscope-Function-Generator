@@ -41,9 +41,10 @@ public:
 // Write command
 class WriteCommand : public FTDCommand {
 private:
+    unsigned char byteValue;
     int count;
 public:
-    WriteCommand(int count) : count(count) {}
+    WriteCommand(unsigned char byteValue, int count = 1) : byteValue(byteValue), count(count) {}
     void execute(FTDController* controller) override;
     std::string getName() const override { return "write"; }
 };
@@ -52,11 +53,14 @@ public:
 class SamplesCommand : public FTDCommand {
 private:
     int numberOfSamples;
+    int intervalMicros;
 public:
-    SamplesCommand(int numberOfSamples) : numberOfSamples(numberOfSamples) {}
+    SamplesCommand(int numberOfSamples, int intervalMicros)
+        : numberOfSamples(numberOfSamples), intervalMicros(intervalMicros) {}
     void execute(FTDController* controller) override;
     std::string getName() const override { return "samples"; }
     int getNumberOfSamples() const { return numberOfSamples; }
+    int getIntervalMicros() const { return intervalMicros; }
 };
 
 // ReadFile command
