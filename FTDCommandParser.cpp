@@ -142,21 +142,29 @@ std::vector<std::string> FTDCommandParser::split(const std::string& str) {
     std::vector<std::string> tokens;
     std::istringstream iss(str);
     std::string token;
-    std::string currentToken;
     
-    for (char c : str) {
-        if (c == ',' || c == ' ' || c == '\t') {
-            if (!currentToken.empty()) {
-                tokens.push_back(currentToken);
-                currentToken.clear();
+    // For scope commands with commas, handle them specially
+    if (str.find("scope") != std::string::npos && str.find(',') != std::string::npos) {
+        // Scope command with commas - split on commas and spaces
+        std::string currentToken;
+        for (char c : str) {
+            if (c == ',' || c == ' ' || c == '\t') {
+                if (!currentToken.empty()) {
+                    tokens.push_back(currentToken);
+                    currentToken.clear();
+                }
+            } else {
+                currentToken += c;
             }
-        } else {
-            currentToken += c;
         }
-    }
-    
-    if (!currentToken.empty()) {
-        tokens.push_back(currentToken);
+        if (!currentToken.empty()) {
+            tokens.push_back(currentToken);
+        }
+    } else {
+        // Regular space-separated commands
+        while (iss >> token) {
+            tokens.push_back(token);
+        }
     }
     
     return tokens;
