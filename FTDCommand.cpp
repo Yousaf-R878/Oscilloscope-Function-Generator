@@ -43,3 +43,9 @@ void WriteFileCommand::execute(FTDController* controller) {
     }
 }
 
+void ScopeCommand::execute(FTDController* controller) {
+    if (controller) {
+        controller->runScopeWithWait(sampleIntervalMicros, waitTimeMicros);
+    }
+}
+

@@ -83,3 +83,17 @@ public:
     std::string getName() const override { return "writeFile"; }
 };
 
+// Scope command with wait functionality
+class ScopeCommand : public FTDCommand {
+private:
+    int sampleIntervalMicros;
+    int waitTimeMicros;
+public:
+    ScopeCommand(int sampleIntervalMicros, int waitTimeMicros)
+        : sampleIntervalMicros(sampleIntervalMicros), waitTimeMicros(waitTimeMicros) {}
+    void execute(FTDController* controller) override;
+    std::string getName() const override { return "scope"; }
+    int getSampleIntervalMicros() const { return sampleIntervalMicros; }
+    int getWaitTimeMicros() const { return waitTimeMicros; }
+};
+

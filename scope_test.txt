@@ -1,0 +1,2 @@
+scope start, sampleTime=100ms, wait=5s, stop
+

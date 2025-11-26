@@ -15,6 +15,7 @@
 #include <Data.h>   
 #include <vector>
 #include "FTDOscilloscope.h"
+#include "FTDOscilloscopeThreaded.h"
 
 // Forward declaration
 class FTDCommand;
@@ -46,6 +47,9 @@ public:
     void readFromFile(const std::string& filename);
     void writeToFile(const std::string& filename);
     
+    // Multi-threaded scope with wait
+    void runScopeWithWait(int sampleIntervalMicros, int waitTimeMicros);
+    
     // Execute commands from parser
     void executeCommand(FTDCommand* command);
     void executeCommands(const std::vector<std::unique_ptr<FTDCommand>>& commands);
@@ -56,6 +60,7 @@ private:
     std::unique_ptr<FTDReader> reader;
     std::unique_ptr<Pipe> pipe;
     std::unique_ptr<FTDOscilloscope> oscilloscope;
+    std::unique_ptr<FTDOscilloscopeThreaded> oscilloscopeThreaded;
     int numberOfSamples;
     int sampleIntervalMicros;
 

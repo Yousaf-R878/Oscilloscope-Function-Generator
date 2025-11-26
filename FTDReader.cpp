@@ -1,4 +1,5 @@
 #include "FTDReader.h"
+#include <string>
 
 FTDReader::FTDReader(FT_HANDLE handle, size_t bufferSize)
     : ftHandle(handle), buffer(bufferSize, 0), bytesRead(0) {

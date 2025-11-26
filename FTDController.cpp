@@ -15,6 +15,7 @@ FTDController::FTDController() : ftHandle(nullptr), numberOfSamples(0), sampleIn
     reader = std::make_unique<FTDReader>(ftHandle);
     pipe = std::make_unique<Pipe>();
     oscilloscope = std::make_unique<FTDOscilloscope>(reader.get(), writer.get());
+    oscilloscopeThreaded = std::make_unique<FTDOscilloscopeThreaded>(reader.get(), writer.get());
 }
 
 FTDController::~FTDController() {
@@ -258,8 +259,18 @@ void FTDController::writeToFile(const std::string& filename) {
         throw std::runtime_error("Writer not initialized");
     }
     
-    // If oscilloscope has collected data, write it
-    if (oscilloscope && !oscilloscope->getCollectedData().empty()) {
+    // Check threaded oscilloscope first
+    if (oscilloscopeThreaded && !oscilloscopeThreaded->getCollectedData().empty()) {
+        auto data = oscilloscopeThreaded->getCollectedData();
+        std::ofstream file(filename, std::ios::binary);
+        if (!file) {
+            throw std::runtime_error("Failed to open file for writing: " + filename);
+        }
+        file.write(reinterpret_cast<const char*>(data.data()), data.size());
+        std::cout << "Wrote " << data.size() << " bytes to file: " << filename << std::endl;
+    }
+    // If regular oscilloscope has collected data, write it
+    else if (oscilloscope && !oscilloscope->getCollectedData().empty()) {
         auto data = oscilloscope->getCollectedData();
         std::ofstream file(filename, std::ios::binary);
         if (!file) {
@@ -271,6 +282,19 @@ void FTDController::writeToFile(const std::string& filename) {
         // Write current byte to file
         writer->writeToFile(filename);
     }
+}
+
+void FTDController::runScopeWithWait(int sampleIntervalMicros, int waitTimeMicros) {
+    if (!oscilloscopeThreaded) {
+        throw std::runtime_error("Threaded oscilloscope not initialized");
+    }
+    
+    static std::mutex scope_out_mx;
+    
+    oscilloscopeThreaded->start();
+    oscilloscopeThreaded->collectDataWithWait(sampleIntervalMicros, waitTimeMicros, scope_out_mx);
+    oscilloscopeThreaded->join();
+    oscilloscopeThreaded->stop();
 }
 
 void FTDController::executeCommand(FTDCommand* command) {
