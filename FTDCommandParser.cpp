@@ -60,6 +60,9 @@ std::unique_ptr<FTDCommand> FTDCommandParser::parseCommand(const std::string& li
         }
         return std::make_unique<WriteFileCommand>(tokens[1]);
     }
+    else if (command == "scope") {
+        return parseScopeCommand(tokens);
+    }
     else {
         throw std::runtime_error("Unknown command: " + command);
     }
@@ -139,9 +142,21 @@ std::vector<std::string> FTDCommandParser::split(const std::string& str) {
     std::vector<std::string> tokens;
     std::istringstream iss(str);
     std::string token;
+    std::string currentToken;
     
-    while (iss >> token) {
-        tokens.push_back(token);
+    for (char c : str) {
+        if (c == ',' || c == ' ' || c == '\t') {
+            if (!currentToken.empty()) {
+                tokens.push_back(currentToken);
+                currentToken.clear();
+            }
+        } else {
+            currentToken += c;
+        }
+    }
+    
+    if (!currentToken.empty()) {
+        tokens.push_back(currentToken);
     }
     
     return tokens;
@@ -206,5 +221,40 @@ int FTDCommandParser::parseDurationMicros(const std::string& str) {
     }
 
     return static_cast<int>(micros);
+}
+
+std::unique_ptr<FTDCommand> FTDCommandParser::parseScopeCommand(const std::vector<std::string>& tokens) {
+    int sampleIntervalMicros = 1000;
+    int waitTimeMicros = 5000000;
+    
+    for (size_t i = 0; i < tokens.size(); i++) {
+        std::string token = tokens[i];
+        std::string lowerToken = token;
+        std::transform(lowerToken.begin(), lowerToken.end(), lowerToken.begin(), ::tolower);
+        
+        if (lowerToken == "start" || lowerToken == "stop") {
+            continue;
+        }
+        
+        size_t eqPos = token.find('=');
+        if (eqPos != std::string::npos) {
+            std::string key = token.substr(0, eqPos);
+            std::string value = token.substr(eqPos + 1);
+            
+            std::transform(key.begin(), key.end(), key.begin(), ::tolower);
+            key.erase(0, key.find_first_not_of(" \t"));
+            key.erase(key.find_last_not_of(" \t") + 1);
+            value.erase(0, value.find_first_not_of(" \t"));
+            value.erase(value.find_last_not_of(" \t") + 1);
+            
+            if (key == "sampletime" || key == "sampleinterval") {
+                sampleIntervalMicros = parseDurationMicros(value);
+            } else if (key == "wait") {
+                waitTimeMicros = parseDurationMicros(value);
+            }
+        }
+    }
+    
+    return std::make_unique<ScopeCommand>(sampleIntervalMicros, waitTimeMicros);
 }
 
