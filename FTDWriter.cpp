@@ -1,7 +1,7 @@
 #include <iostream>
+#include <string>
 #include <stdexcept>
 #include <ftd2xx.h>
-#include "FTDWriter.h"
 #include "FTDWriter.h"
 
 // Constructor

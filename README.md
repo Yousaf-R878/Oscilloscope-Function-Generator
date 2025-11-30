@@ -93,6 +93,11 @@ Commands are space-separated and case-insensitive. Each command should be on a s
   - Oscilloscope must be running to begin collection; if already running, sampling begins immediately
 - `readFile <filename>` - Read data from a file (e.g., `readFile input.txt`)
 - `writeFile <filename>` - Write data to a file (e.g., `writeFile output.txt`)
+- `scope start, sampleTime=X, wait=X, stop` - Multi-threaded scope collection with wait (e.g., `scope start, sampleTime=1ms, wait=5s, stop`)
+  - `sampleTime` - Interval between samples (supports `us`, `ms`, `s` suffixes)
+  - `wait` - Total collection duration (supports `us`, `ms`, `s` suffixes)
+  - Displays scrolling data in terminal during collection
+  - Uses separate threads for data collection and display
 
 #### Example Command File
 
@@ -137,9 +142,24 @@ writeFile output.txt
 ./main write 0xFF 10     # Write 0xFF ten times
 ```
 
-#### Oscilloscope Data Collection
+#### Multi-Threaded Oscilloscope Data Collection
 
-The oscilloscope functionality allows you to collect data from the FTDI device:
+The oscilloscope functionality allows you to collect data from the FTDI device with multi-threading support:
+
+**New Scope Command (Multi-threaded):**
+```bash
+./main scope start, sampleTime=1ms, wait=5s, stop
+```
+
+This command:
+- Starts the oscilloscope
+- Collects samples at the specified interval (1ms in this example)
+- Continues collecting for the specified duration (5s in this example)
+- Displays scrolling data in the terminal during collection
+- Uses separate threads for data collection and display
+- Stops automatically when the wait time expires
+
+**Legacy Oscilloscope Data Collection:**
 
 1. Start the oscilloscope with `start`
 2. Configure sampling with `samples <number> <interval>` (e.g., `samples 500 2ms`)

@@ -25,5 +25,8 @@ private:
 
     // Helper to parse duration value into microseconds (supports s, ms, us)
     static int parseDurationMicros(const std::string& str);
+    
+    // Helper to parse scope command with parameters
+    static std::unique_ptr<FTDCommand> parseScopeCommand(const std::vector<std::string>& tokens);
 };
 
