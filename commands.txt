@@ -3,7 +3,7 @@
 start
 
 # Set number of samples to collect with 5 ms between samples
-samples 10 5ms
+samples 10 5000ms
 
 # Read 64 bytes from FTDI device
 read 16

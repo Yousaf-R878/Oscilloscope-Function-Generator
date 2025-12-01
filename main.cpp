@@ -1,5 +1,6 @@
-#include <FTDController.h>
-#include "FTDCommandParser.h"
+#include "Controller/FTDController.h"
+#include "View/FTDCommandParser.h"
+#include "View/Commands/FTDCommand.h"
 #include <iostream>
 #include <string>
 #include <fstream>
