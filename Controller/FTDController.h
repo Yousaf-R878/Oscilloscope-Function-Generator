@@ -25,7 +25,6 @@ public:
     FTDController();
     ~FTDController();
 
-    void runMenu();
     void controlLED();
     void sendMorseCode();
     void driverTest();

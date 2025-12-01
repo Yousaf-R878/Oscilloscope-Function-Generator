@@ -81,6 +81,40 @@ void FTDController::addProcess(std::shared_ptr<Process> p) {
     pipe->addProcess(p);
 }
 
+void FTDController::executePipe() {
+    if (!pipe) {
+        std::cout << "No pipe processes configured.\n";
+        return;
+    }
+    
+    // Read one byte from the FTDI device
+    reader->read();
+    auto dataBuffer = reader->getBuffer();
+    if (dataBuffer.empty()) {
+        std::cout << "No data available to process.\n";
+        return;
+    }
+
+    Data data(dataBuffer[0]);
+    std::cout << "Original data: " << data.getValue() << "\n";
+
+    // Execute all filters
+    pipe->execute(data);
+
+    // Clamp and write result
+    unsigned char result = data.getValue();
+    std::cout << "Processed (clamped) data: " << (int)result << "\n";
+
+    writer->setByte(result);
+    writer->write();
+
+    std::cout << "Processed byte written to FTDI device.\n";
+
+    pipe->clear();
+    
+    std::cout << "Pipe cleared.\n";
+}
+
 void FTDController::runProcess(Process& process){
     reader->read();
     auto buffer = reader->getBuffer(); 
@@ -97,86 +131,6 @@ void FTDController::runProcess(Process& process){
               << static_cast<int>(data.getValue()) << "\n";
 }
 
-void FTDController::runMenu() {
-    int choice = 0;
-    while (true) {
-        std::cout << "\nControl Menu\n"
-                  << "1. Write byte to port\n"
-                  << "2. Read byte from port\n"
-                  << "3. Driver Test\n"
-                  << "4. Add Shift filter\n"
-                  << "5. Add Scale filter\n"
-                  << "6. Run Pipe\n"
-                  << "7. Exit\n"
-                  << "Enter your choice: ";
-        std::cin >> choice;
-
-        if (choice == 7) break;
-
-        switch (choice) {
-            case 1:
-                writer->write();
-                break;
-            case 2:
-                reader->read();
-                reader->getBuffer();
-                break;
-            case 3:
-                driverTest();
-                break;
-            case 4: { // Shift
-                int offset;
-                std::cout << "Enter shift offset: ";
-                std::cin >> offset;
-                pipe->addProcess(std::make_shared<Shift>(offset));
-                std::cout << "Added Shift filter (" << offset << ")\n";
-                break;
-            }
-            case 5: { // Scale
-                int factor;
-                std::cout << "Enter scale factor: ";
-                std::cin >> factor;
-                pipe->addProcess(std::make_shared<Scale>(factor));
-                std::cout << "Added Scale filter (" << factor << ")\n";
-                break;
-            }
-            case 6: {
-                std::cout << "Running pipe...\n";
-
-                // Read one byte from the FTDI device
-                reader->read();
-                auto dataBuffer = reader->getBuffer();
-                if (dataBuffer.empty()) {
-                    std::cout << "No data available to process.\n";
-                    break;
-                }
-
-                Data data(dataBuffer[0]);
-                std::cout << "Original data: " << data.getValue() << "\n";
-
-                // Execute all filters
-                pipe->execute(data);
-
-                // Clamp and write result
-                unsigned char result = data.getValue();
-                std::cout << "Processed (clamped) data: " << (int)result << "\n";
-
-                writer->setByte(result);
-                writer->write();
-
-                std::cout << "Processed byte written to FTDI device.\n";
-
-                pipe->clear();
-                
-                std::cout << "Pipe cleared.\n";
-                break;
-            }
-            default:
-                std::cout << "Invalid choice. Try again.\n";
-                break;
-        }
-    }
-}
 
 // Command execution methods
 void FTDController::startOscilloscope() {
@@ -309,4 +263,12 @@ void FTDController::executeCommands(const std::vector<std::unique_ptr<FTDCommand
             executeCommand(command.get());
         }
     }
+}
+
+FTDReader* FTDController::getReader() const {
+    return reader.get();
+}
+
+FTDWriter* FTDController::getWriter() const {
+    return writer.get();
 }

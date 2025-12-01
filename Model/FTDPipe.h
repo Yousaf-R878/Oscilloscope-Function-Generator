@@ -1,6 +1,9 @@
+#pragma once
+
 #include <vector>
 #include <memory>
 #include "FTDProcess.h"
+#include "Data.h"
 
 class Pipe {
     std::vector<std::shared_ptr<Process>> processes;

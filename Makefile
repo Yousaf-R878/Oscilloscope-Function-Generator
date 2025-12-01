@@ -8,6 +8,7 @@ SRC = main.cpp \
       Model/FTDOscilloscope.cpp \
       Model/FTDOscilloscopeThreaded.cpp \
       View/FTDCommandParser.cpp \
+      View/FTDRunMenu.cpp \
       View/Commands/FTDCommand.cpp \
       View/Commands/FTDStartCommand.cpp \
       View/Commands/FTDStopCommand.cpp \

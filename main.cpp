@@ -1,5 +1,6 @@
 #include "Controller/FTDController.h"
 #include "View/FTDCommandParser.h"
+#include "View/FTDRunMenu.h"
 #include "View/Commands/FTDCommand.h"
 #include <iostream>
 #include <string>
@@ -139,8 +140,9 @@ int main(int argc, char* argv[]) {
     }
     else {
         // No arguments provided, run interactive menu
-        controller.runMenu();
+        FTDRunMenu runMenu(&controller);
+        runMenu.run();
     }
-    
+
     return 0;
 }
