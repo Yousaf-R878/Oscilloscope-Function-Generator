@@ -1,0 +1,8 @@
+/Users/yousafrajput/SSW 565/Oscilloscope-Function-Generator/build/CMakeFiles/main.dir
+/Users/yousafrajput/SSW 565/Oscilloscope-Function-Generator/build/CMakeFiles/scope.dir
+/Users/yousafrajput/SSW 565/Oscilloscope-Function-Generator/build/CMakeFiles/edit_cache.dir
+/Users/yousafrajput/SSW 565/Oscilloscope-Function-Generator/build/CMakeFiles/rebuild_cache.dir
+/Users/yousafrajput/SSW 565/Oscilloscope-Function-Generator/build/CMakeFiles/main_autogen_timestamp_deps.dir
+/Users/yousafrajput/SSW 565/Oscilloscope-Function-Generator/build/CMakeFiles/main_autogen.dir
+/Users/yousafrajput/SSW 565/Oscilloscope-Function-Generator/build/CMakeFiles/scope_autogen_timestamp_deps.dir
+/Users/yousafrajput/SSW 565/Oscilloscope-Function-Generator/build/CMakeFiles/scope_autogen.dir

@@ -32,10 +32,12 @@ public:
 
     void addProcess(std::shared_ptr<Process> p);
     void executePipe();
+    void clearPipe();
 
     // optional accessors if view wants to directly call reader/writer
     FTDReader* getReader() const;
     FTDWriter* getWriter() const;
+    FTDOscilloscopeThreaded* getOscilloscopeThreaded() const;
 
     // Command execution methods for CLI
     void startOscilloscope();
@@ -48,6 +50,9 @@ public:
     
     // Multi-threaded scope with wait
     void runScopeWithWait(int sampleIntervalMicros, int waitTimeMicros);
+    
+    // Wave test generation
+    void generateWaveTest(int samples, int amplitude = 127, int intervalMicros = 1000);
     
     // Execute commands from parser
     void executeCommand(FTDCommand* command);

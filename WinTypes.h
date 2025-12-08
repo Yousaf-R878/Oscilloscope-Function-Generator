@@ -1,3 +1,4 @@
+// [MermaidChart: 68cce974-4716-4758-8edb-c5c6bcec8b44]
 #ifndef __WINDOWS_TYPES__
 #define __WINDOWS_TYPES__
 

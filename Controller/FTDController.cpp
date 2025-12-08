@@ -1,6 +1,9 @@
 #include "FTDController.h"
 #include "../Model/Data.h"
 #include <fstream>
+#include <cmath>
+#include <thread>
+#include <chrono>
 #include "../View/Commands/FTDCommand.h"
 
 #ifdef _WIN32
@@ -85,34 +88,41 @@ void FTDController::executePipe() {
     if (!pipe) {
         std::cout << "No pipe processes configured.\n";
         return;
-    }
-    
-    // Read one byte from the FTDI device
-    reader->read();
-    auto dataBuffer = reader->getBuffer();
-    if (dataBuffer.empty()) {
-        std::cout << "No data available to process.\n";
+            }
+
+                // Read one byte from the FTDI device
+                reader->read();
+                auto dataBuffer = reader->getBuffer();
+                if (dataBuffer.empty()) {
+                    std::cout << "No data available to process.\n";
         return;
+                }
+
+                Data data(dataBuffer[0]);
+                std::cout << "Original data: " << data.getValue() << "\n";
+
+                // Execute all filters
+                pipe->execute(data);
+
+                // Clamp and write result
+                unsigned char result = data.getValue();
+                std::cout << "Processed (clamped) data: " << (int)result << "\n";
+
+                writer->setByte(result);
+                writer->write();
+
+                std::cout << "Processed byte written to FTDI device.\n";
+
+                pipe->clear();
+                
+                std::cout << "Pipe cleared.\n";
+}
+
+void FTDController::clearPipe() {
+    if (pipe) {
+        pipe->clear();
+        std::cout << "Pipe cleared.\n";
     }
-
-    Data data(dataBuffer[0]);
-    std::cout << "Original data: " << data.getValue() << "\n";
-
-    // Execute all filters
-    pipe->execute(data);
-
-    // Clamp and write result
-    unsigned char result = data.getValue();
-    std::cout << "Processed (clamped) data: " << (int)result << "\n";
-
-    writer->setByte(result);
-    writer->write();
-
-    std::cout << "Processed byte written to FTDI device.\n";
-
-    pipe->clear();
-    
-    std::cout << "Pipe cleared.\n";
 }
 
 void FTDController::runProcess(Process& process){
@@ -251,6 +261,44 @@ void FTDController::runScopeWithWait(int sampleIntervalMicros, int waitTimeMicro
     oscilloscopeThreaded->stop();
 }
 
+void FTDController::generateWaveTest(int samples, int amplitude, int intervalMicros) {
+    if (!writer) {
+        throw std::runtime_error("Writer not initialized");
+    }
+    
+    if (samples <= 0) {
+        throw std::invalid_argument("Number of samples must be greater than zero");
+    }
+    if (amplitude < 0 || amplitude > 127) {
+        throw std::invalid_argument("Amplitude must be between 0 and 127");
+    }
+    
+    std::cout << "Generating wave test: " << samples << " samples, amplitude " << amplitude 
+              << ", interval " << intervalMicros << " microseconds" << std::endl;
+    
+    // Generate sine wave pattern
+    for (int i = 0; i < samples; ++i) {
+        // Generate sine wave: value = 127 + amplitude * sin(2π * i / samples)
+        double angle = 2.0 * 3.14159265358979323846 * i / samples;
+        double sineValue = std::sin(angle);
+        int byteValue = static_cast<int>(127.0 + amplitude * sineValue);
+        
+        // Clamp to 0-255 range
+        byteValue = std::max(0, std::min(255, byteValue));
+        
+        // Write the byte
+        writer->setByte(static_cast<unsigned char>(byteValue));
+        writer->write();
+        
+        // Add delay between writes to create time-based pattern
+        if (intervalMicros > 0 && i < samples - 1) {
+            std::this_thread::sleep_for(std::chrono::microseconds(intervalMicros));
+        }
+    }
+    
+    std::cout << "Wave test generation completed." << std::endl;
+}
+
 void FTDController::executeCommand(FTDCommand* command) {
     if (command) {
         command->execute(this);
@@ -271,4 +319,8 @@ FTDReader* FTDController::getReader() const {
 
 FTDWriter* FTDController::getWriter() const {
     return writer.get();
+}
+
+FTDOscilloscopeThreaded* FTDController::getOscilloscopeThreaded() const {
+    return oscilloscopeThreaded.get();
 }
